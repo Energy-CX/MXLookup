@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Google or Microsoft? – Energy CX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Spectral:ital,wght@0,400;1,400&family=Inter:wght@300;400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: dark;
+  --carbon: #0B0B0B;
+  --blue: #0032B0;
+  --cyan: #00D3F2;
+  --lime: #CCFD1A;
+  --red: #FF6B6B;
+  --white: #FFFFFF;
+  --grey-1: #B8BEC6;
+  --grey-2: #7C838C;
+  --line: #24282E;
+  --surface: #121418;
+  --display: "Montserrat", "Segoe UI", system-ui, sans-serif;
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --ui: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--carbon);
+  color: var(--white);
+  font-family: var(--ui);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+/* Corner registration marks */
+.corner { position: fixed; width: 12px; height: 12px; border: 0 solid var(--cyan); pointer-events: none; }
+.corner.tl { top: 22px; left: 22px; border-top-width: 2px; border-left-width: 2px; }
+.corner.tr { top: 22px; right: 22px; border-top-width: 2px; border-left-width: 2px; }
+.corner.bl { bottom: 22px; left: 22px; border-top-width: 2px; border-left-width: 2px; }
+.corner.br { bottom: 22px; right: 22px; border-top-width: 2px; border-left-width: 2px; }
+
+main { max-width: 780px; margin: 0 auto; padding: 56px 28px 72px; }
+.brand { display: flex; flex-direction: column; gap: 10px; margin-bottom: clamp(48px, 10vw, 96px); }
+.brand img { height: 24px; width: auto; align-self: flex-start; }
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--grey-2);
+  border-left: 2px solid var(--cyan);
+  padding-left: 10px;
+  line-height: 1.2;
+}
+h1 {
+  font-family: var(--display);
+  font-weight: 300;
+  font-size: clamp(2.25rem, 6vw, 3.4rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin: 18px 0 18px;
+}
+h1 span { display: block; color: var(--grey-2); }
+.lede { font-family: var(--serif); font-size: 1.2rem; color: var(--grey-1); margin: 0 0 36px; max-width: 30em; }
+
+form { display: flex; gap: 10px; flex-wrap: wrap; }
+.field {
+  flex: 1 1 340px;
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid #2E3540;
+  border-radius: 12px;
+  padding: 0 18px;
+  transition: border-color .15s;
+}
+.field:focus-within { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,211,242,.18); }
+input {
+  flex: 1; min-width: 0; border: 0; background: transparent; color: var(--white);
+  font: 400 1.25rem/1 var(--ui); padding: 19px 0; outline: none;
+}
+input::placeholder { color: var(--grey-2); }
+button { font-family: var(--ui); cursor: pointer; }
+.go {
+  background: var(--cyan); color: var(--carbon); border: 0;
+  font-weight: 600; font-size: 1.05rem;
+  padding: 0 30px; min-height: 62px; border-radius: 999px;
+}
+.go:hover { filter: brightness(1.08); }
+.go:disabled { opacity: .55; cursor: wait; }
+.go:focus-visible, .ghost:focus-visible, summary:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+.hint { color: var(--grey-2); font-size: .875rem; margin: 12px 2px 0; }
+
+#results { margin-top: 44px; display: grid; gap: 18px; }
+.card {
+  border: 1px solid rgba(0,211,242,.28);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #0E1116 0%, #0A1530 100%);
+  padding: 24px 26px 20px;
+  --accent: var(--white);
+}
+.card.google { --accent: var(--lime); }
+.card.microsoft { --accent: var(--cyan); }
+.card.other { --accent: var(--white); }
+.card.error { --accent: var(--red); border-color: rgba(255,107,107,.35); background: linear-gradient(180deg, #121012 0%, #1A0F12 100%); }
+.card.loading { border-color: var(--line); background: var(--surface); }
+
+.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.domain { font-family: var(--mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--grey-2); word-break: break-all; }
+.verdict {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  color: var(--accent);
+  margin: 10px 0 8px;
+}
+.error .verdict { font-size: clamp(1.3rem, 3.6vw, 1.6rem); }
+.loading .verdict { font-weight: 300; color: var(--grey-2); }
+.why { margin: 0; color: var(--grey-1); max-width: 42em; }
+.confidence {
+  font-family: var(--ui); font-size: .8rem; font-weight: 600;
+  padding: 4px 12px; border-radius: 999px; white-space: nowrap;
+  border: 1px solid currentColor; color: var(--grey-1);
+}
+.confidence.confirmed { color: var(--carbon); background: var(--accent); border-color: var(--accent); }
+.confidence.likely { color: var(--accent); }
+
+.actions { display: flex; gap: 8px; margin-top: 16px; align-items: center; flex-wrap: wrap; }
+.ghost {
+  background: transparent; color: var(--white);
+  border: 1px solid #343B46; border-radius: 999px;
+  padding: 7px 16px; font-size: .85rem; font-weight: 500;
+}
+.ghost:hover { border-color: var(--cyan); }
+details { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 6px; }
+summary { cursor: pointer; color: var(--grey-2); font-size: .875rem; padding: 6px 0; width: fit-content; }
+summary:hover { color: var(--white); }
+.evidence { margin: 4px 0 0; padding: 0; list-style: none; }
+.evidence li { display: grid; grid-template-columns: 180px 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.evidence li:last-child { border-bottom: 0; }
+.ev-label { color: var(--grey-1); font-size: .9rem; }
+.evidence code {
+  font-family: var(--mono); font-size: .8rem; color: var(--white);
+  white-space: pre; overflow-x: auto; display: block;
+}
+@media (max-width: 560px) { .evidence li { grid-template-columns: 1fr; gap: 4px; } }
+
+.spinner {
+  display: inline-block; width: 14px; height: 14px; margin-right: 10px; vertical-align: 1px;
+  border: 2px solid #2E3540; border-top-color: var(--cyan); border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+
+.legend { margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--line); color: var(--grey-2); font-size: .875rem; }
+.legend p { margin: 0 0 10px; max-width: 48em; }
+.legend strong { color: var(--grey-1); font-weight: 600; }
+.foot { display: flex; gap: 32px; margin-top: 28px; font-family: var(--mono); font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--grey-2); }
+.foot span:last-child { color: var(--cyan); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+<main>
+  <div class="brand">
+    <img src="data:image/png;base64,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" alt="Energy CX">
+  </div>
+
+  <div class="eyebrow">Email provider check</div>
+  <h1>Google or Microsoft?<span>Know before you reach out.</span></h1>
+  <p class="lede">Paste a contact’s email or their company domain to see who hosts their inbox.</p>
+
+  <form id="form" autocomplete="off">
+    <label class="field">
+      <span class="sr">Email or domain</span>
+      <input id="q" type="text" inputmode="email" spellcheck="false" autocapitalize="off"
+             placeholder="jane@acme.com or acme.com" autofocus>
+    </label>
+    <button class="go" id="go" type="submit">Check</button>
+  </form>
+  <p class="hint">Checking a list? Paste several, separated by commas, spaces or new lines.</p>
+
+  <section id="results" aria-live="polite"></section>
+
+  <div class="legend">
+    <p><strong>How it works.</strong> The tool reads the domain’s public mail records (MX), the same ones every email server uses to deliver mail. Only the domain is looked up; the person’s name never leaves your browser.</p>
+    <p><strong>Confirmed</strong> means mail goes straight to Google or Microsoft. <strong>Likely</strong> means a security filter such as Proofpoint or Mimecast sits in front, so the provider is read from the domain’s sending records instead.</p>
+    <div class="foot"><span>Energy CX</span><span>BDR tools</span></div>
+  </div>
+</main>
+
+<script>
+const PERSONAL = {
+  "gmail.com": "google", "googlemail.com": "google",
+  "outlook.com": "microsoft", "hotmail.com": "microsoft", "live.com": "microsoft", "msn.com": "microsoft",
+  "yahoo.com": "other", "icloud.com": "other", "me.com": "other", "aol.com": "other",
+  "proton.me": "other", "protonmail.com": "other"
+};
+
+const GOOGLE_MX = [/(^|\.)aspmx\.l\.google\.com$/, /(^|\.)googlemail\.com$/, /(^|\.)google\.com$/];
+const MS_MX = [/\.mail\.protection\.outlook\.com$/, /\.mx\.microsoft$/, /(^|\.)outlook\.com$/, /(^|\.)hotmail\.com$/];
+
+const GATEWAYS = [
+  [/(pphosted|ppe-hosted)\.com$/, "Proofpoint"],
+  [/mimecast(-offshore)?\.com$|mimecast\.co\.za$/, "Mimecast"],
+  [/barracudanetworks\.com$/, "Barracuda"],
+  [/iphmx\.com$/, "Cisco Secure Email"],
+  [/trendmicro\.(com|eu)$|tmes\.trendmicro/, "Trend Micro"],
+  [/sophos\.com$/, "Sophos"],
+  [/messagelabs\.com$/, "Symantec / Broadcom"],
+  [/mailcontrol\.com$/, "Forcepoint"],
+  [/hornetsecurity\.com$/, "Hornetsecurity"],
+  [/spamh?titan\.com$/, "SpamTitan"],
+  [/mailguard\.com\.au$/, "MailGuard"],
+  [/antispamcloud\.com$|spamexperts/, "SpamExperts"]
+];
+
+const OTHER_MX = [
+  [/zoho\.(com|eu|in|com\.au|jp)$/, "Zoho Mail"],
+  [/secureserver\.net$/, "GoDaddy email"],
+  [/emailsrvr\.com$/, "Rackspace email"],
+  [/messagingengine\.com$/, "Fastmail"],
+  [/protonmail\.ch$/, "Proton Mail"],
+  [/icloud\.com$/, "iCloud Mail"],
+  [/yahoodns\.net$/, "Yahoo"],
+  [/awsapps\.com$|amazonaws\.com$/, "Amazon WorkMail / AWS"],
+  [/privateemail\.com$/, "Namecheap Private Email"],
+  [/ionos\.(com|de|co\.uk)$|1and1/, "IONOS"],
+  [/titan\.email$/, "Titan Mail"]
+];
+
+const NAMES = { google: "Google Workspace", microsoft: "Microsoft 365" };
+
+function normalize(raw) {
+  let s = raw.trim().toLowerCase().replace(/^mailto:/, "").replace(/^[<"'(]+|[>"'),.;]+$/g, "");
+  if (s.includes("@")) s = s.slice(s.lastIndexOf("@") + 1);
+  s = s.replace(/^[a-z]+:\/\//, "").split(/[\/?#:]/)[0].replace(/^www\./, "").replace(/\.$/, "");
+  return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(s) ? s : null;
+}
+
+async function fetchWithTimeout(url, opts = {}, ms = 6000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try { return await fetch(url, { ...opts, signal: ctrl.signal }); }
+  finally { clearTimeout(timer); }
+}
+
+async function dns(name, type) {
+  const q = "name=" + encodeURIComponent(name) + "&type=" + type;
+  const tries = [
+    () => fetchWithTimeout("https://dns.google/resolve?" + q),
+    () => fetchWithTimeout("https://cloudflare-dns.com/dns-query?" + q, { headers: { accept: "application/dns-json" } })
+  ];
+  let last;
+  for (const t of tries) {
+    try {
+      const r = await t();
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return await r.json();
+    } catch (e) { last = e; }
+  }
+  throw last || new Error("lookup failed");
+}
+
+const TYPE_NUM = { MX: 15, TXT: 16, CNAME: 5 };
+const answers = (res, type) => (res && res.Answer ? res.Answer.filter(a => a.type === TYPE_NUM[type]) : []);
+const host = s => s.toLowerCase().replace(/\.$/, "");
+const txt = s => s.replace(/"\s+"/g, "").replace(/^"|"$/g, "");
+const matchAny = (h, list) => list.some(r => r.test(h));
+const findLabel = (h, list) => { const m = list.find(([r]) => r.test(h)); return m ? m[1] : null; };
+
+async function check(domain) {
+  if (PERSONAL[domain]) {
+    const p = PERSONAL[domain];
+    return {
+      kind: p, verdict: p === "other" ? "Personal email address" : "Personal " + (p === "google" ? "Gmail" : "Outlook") + " address",
+      confidence: "Confirmed",
+      why: "This is a consumer address, not a company domain. Ask for their work email or check the company’s website domain instead.",
+      evidence: []
+    };
+  }
+
+  const [mxRes, txtRes, adRes] = await Promise.all([
+    dns(domain, "MX"),
+    dns(domain, "TXT").catch(() => null),
+    dns("autodiscover." + domain, "CNAME").catch(() => null)
+  ]);
+
+  if (mxRes.Status === 3) {
+    return { kind: "error", verdict: "Domain not found", confidence: "", why: "Nothing exists at " + domain + ". Check the spelling.", evidence: [] };
+  }
+
+  const mx = answers(mxRes, "MX")
+    .map(a => { const [p, h] = a.data.split(/\s+/); return { pri: +p, host: host(h || "") }; })
+    .filter(m => m.host)
+    .sort((a, b) => a.pri - b.pri);
+
+  const txts = answers(txtRes, "TXT").map(a => txt(a.data));
+  const spf = txts.find(t => /^v=spf1/i.test(t)) || "";
+  const spfGoogle = /include:_spf\.google\.com/i.test(spf);
+  const spfMs = /include:spf\.protection\.outlook\.com/i.test(spf);
+  const msVerify = txts.some(t => /^MS=ms\d+/i.test(t));
+  const adCname = answers(adRes, "CNAME").map(a => host(a.data));
+  const adMs = adCname.some(h => /autodiscover\.outlook\.com$/.test(h));
+
+  const evidence = [];
+  if (mx.length) evidence.push(["Mail servers (MX)", mx.map(m => m.pri + "  " + m.host).join("\n")]);
+  if (spf) evidence.push(["Sending record (SPF)", spf]);
+  const extra = [];
+  if (msVerify) extra.push("Microsoft domain verification record (MS=…)");
+  if (adMs) extra.push("autodiscover → autodiscover.outlook.com");
+  if (extra.length) evidence.push(["Other Microsoft signals", extra.join("\n")]);
+
+  const nullMx = mx.length === 1 && (mx[0].host === "" || mx[0].host === ".");
+  if (!mx.length || nullMx) {
+    return { kind: "error", verdict: "No email on this domain", confidence: "",
+      why: "The domain has no mail servers set up, so it can’t receive email. They may use a different domain for email.", evidence };
+  }
+
+  const g = mx.filter(m => matchAny(m.host, GOOGLE_MX));
+  const ms = mx.filter(m => matchAny(m.host, MS_MX));
+
+  if (g.length || ms.length) {
+    let kind;
+    if (g.length && ms.length) kind = matchAny(mx[0].host, GOOGLE_MX) ? "google" : "microsoft";
+    else kind = g.length ? "google" : "microsoft";
+    const mixed = g.length && ms.length;
+    return {
+      kind, verdict: NAMES[kind], confidence: "Confirmed",
+      why: mixed
+        ? "Their mail servers point to both Google and Microsoft, which usually means a migration in progress. The primary (first-priority) server is " + NAMES[kind] + "."
+        : "Their email is delivered directly to " + (kind === "google" ? "Google" : "Microsoft") + "’s mail servers.",
+      evidence
+    };
+  }
+
+  const gateway = mx.map(m => findLabel(m.host, GATEWAYS)).find(Boolean);
+  const msHints = (spfMs ? 1 : 0) + (msVerify ? 1 : 0) + (adMs ? 1 : 0);
+
+  if (gateway) {
+    let kind = null;
+    if (spfGoogle && !spfMs) kind = "google";
+    else if (msHints && !spfGoogle) kind = "microsoft";
+    if (kind) {
+      return {
+        kind, verdict: NAMES[kind], confidence: "Likely",
+        why: "Incoming mail is filtered by " + gateway + " first, so the inbox itself is hidden. Their other records point to " + NAMES[kind] + " behind it.",
+        evidence
+      };
+    }
+    return {
+      kind: "other", verdict: "Hidden behind " + gateway, confidence: "Unclear",
+      why: spfGoogle && spfMs
+        ? "Mail is filtered by " + gateway + ", and their sending records list both Google and Microsoft, so the inbox provider can’t be told apart from outside."
+        : "Mail is filtered by " + gateway + ", and their other records don’t show who hosts the inbox.",
+      evidence
+    };
+  }
+
+  const otherName = mx.map(m => findLabel(m.host, OTHER_MX)).find(Boolean);
+  if (otherName) {
+    return { kind: "other", verdict: otherName, confidence: "Confirmed",
+      why: "Not Google or Microsoft. Their email is hosted with " + otherName + ".", evidence };
+  }
+
+  if (spfGoogle !== spfMs) {
+    const kind = spfGoogle ? "google" : "microsoft";
+    return { kind, verdict: NAMES[kind], confidence: "Likely",
+      why: "Their mail server (" + mx[0].host + ") isn’t one we recognise, but their sending records point to " + NAMES[kind] + ".", evidence };
+  }
+
+  return { kind: "other", verdict: "Other or self-hosted", confidence: "Unclear",
+    why: "Mail goes to " + mx[0].host + ", which isn’t Google or Microsoft. It may be self-hosted or a smaller provider.", evidence };
+}
+
+const results = document.getElementById("results");
+const form = document.getElementById("form");
+const input = document.getElementById("q");
+const go = document.getElementById("go");
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+function render(card, domain, r) {
+  card.className = "card " + r.kind;
+  card.replaceChildren();
+  const top = el("div", "top");
+  top.append(el("span", "domain", domain));
+  if (r.confidence) top.append(el("span", "confidence " + r.confidence.toLowerCase(), r.confidence));
+  card.append(top, el("div", "verdict", r.verdict), el("p", "why", r.why));
+
+  if (r.kind !== "error") {
+  const actions = el("div", "actions");
+  const copy = el("button", "ghost", "Copy result");
+  copy.type = "button";
+  copy.addEventListener("click", async () => {
+    const line = domain + " – " + r.verdict + (r.confidence ? " (" + r.confidence.toLowerCase() + ")" : "");
+    try { await navigator.clipboard.writeText(line); copy.textContent = "Copied"; }
+    catch { copy.textContent = "Copy failed"; }
+    setTimeout(() => (copy.textContent = "Copy result"), 1600);
+  });
+  actions.append(copy);
+  card.append(actions);
+  }
+
+  if (r.evidence.length) {
+    const d = el("details");
+    d.append(el("summary", null, "Show the records"));
+    const ul = el("ul", "evidence");
+    for (const [label, value] of r.evidence) {
+      const li = el("li");
+      li.append(el("span", "ev-label", label), el("code", null, value));
+      ul.append(li);
+    }
+    d.append(ul);
+    card.append(d);
+  }
+}
+
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  const tokens = input.value.split(/[\s,;]+/).filter(Boolean).slice(0, 25);
+  if (!tokens.length) { input.focus(); return; }
+  go.disabled = true;
+
+  const cards = [];
+  const bad = tokens.filter(t => !normalize(t));
+  const good = [...new Set(tokens.map(normalize).filter(Boolean))];
+  if (bad.length) {
+    const card = el("article", "card");
+    render(card, bad.join(", "), { kind: "error",
+      verdict: good.length ? "Skipped what isn’t an email or domain" : "That doesn’t look like an email or domain",
+      confidence: "", why: "Try something like jane@acme.com or acme.com.", evidence: [] });
+    cards.push(card);
+  }
+  const jobs = good.map(domain => {
+    const card = el("article", "card loading");
+    cards.push(card);
+    const top = el("div", "top"); top.append(el("span", "domain", domain));
+    const v = el("div", "verdict"); v.append(el("span", "spinner"), document.createTextNode("Checking…"));
+    card.append(top, v);
+    return check(domain)
+      .then(r => render(card, domain, r))
+      .catch(() => render(card, domain, { kind: "error", verdict: "Couldn’t run the lookup", confidence: "",
+        why: "The lookup was blocked. If you’re viewing this inside Claude or another app’s preview, download the file and open it in Chrome, Edge or Safari. Otherwise your network or VPN may be blocking dns.google and cloudflare-dns.com.",
+        evidence: [] }));
+  });
+
+  results.prepend(...cards);
+
+  await Promise.all(jobs);
+  go.disabled = false;
+  input.select();
+});
+</script>
+</body>
+</html>
